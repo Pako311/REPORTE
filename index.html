@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visualizador de Mapa con Tabla de Excel</title>
+  <!-- Librería para trabajar con Excel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
+  
+  <!-- Hojas de estilo -->
+  <link rel="stylesheet" href="./resources/ol.css">
+  <link rel="stylesheet" href="resources/fontawesome-all.min.css">
+  <link rel="stylesheet" href="resources/ol-layerswitcher.css">
+  <link rel="stylesheet" href="resources/qgis2web.css">
+  
+  <style>
+    html, body {
+      background-color: #ffffff;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+    .ol-control > * {
+      background-color: #f8f8f8!important;
+      color: #444444!important;
+      border-radius: 0px;
+    }
+    .ol-attribution a,
+    .gcd-gl-input::placeholder,
+    .search-layer-input-search::placeholder {
+      color: #444444!important;
+    }
+    .search-layer-input-search {
+      background-color: #f8f8f8!important;
+    }
+    .ol-control > *:focus,
+    .ol-control >*:hover {
+      background-color: rgba(248, 248, 248, 0.7)!important;
+    }
+    .ol-control {
+      background-color: rgba(255,255,255,.4)!important;
+      padding: 2px!important;
+    }
+    #coordinates {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background-color: rgba(255, 255, 255, 0.7);
+      padding: 5px;
+      border-radius: 5px;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      z-index: 1000;
+    }
+    #search-container {
+      position: absolute;
+      top: 10px;
+      left: 50px;
+      z-index: 1000;
+      background: white;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);
+      width: 250px;
+    }
+    #search-input {
+      width: 150px;
+      padding: 5px;
+    }
+    button {
+      padding: 5px 10px;
+      margin-left: 10px;
+    }
+    #tabla-container {
+      display: none;
+      position: absolute;
+      top: 160px;
+      left: 50px;
+      z-index: 1000;
+      background: white;
+      padding: 12px;
+      width: 370px;
+      box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);
+      border-radius: 5px;
+      max-height: 80%;
+      overflow-y: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    table, th, td {
+      border: 1px solid black;
+    }
+    th {
+      background-color: #28a745;
+      color: white;
+      font-weight: bold;
+      padding: 5px;
+      text-align: left;
+    }
+    td {
+      padding: 5px;
+      text-align: left;
+    }
+    tr:nth-child(2n) td {
+      background-color: #d4edda;
+      color: black;
+    }
+    tr:nth-child(2n+1) td {
+      background-color: white;
+      color: black;
+    }
+    #modal-close {
+      color: #aaa;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #modal-close:hover,
+    #modal-close:focus {
+      color: black;
+      text-decoration: none;
+    }
+
+    /* Estilos responsivos */
+    @media (max-width: 768px) {
+      #search-container {
+        width: 200px;
+        top: 15px;
+        left: 10px;
+      }
+      #search-input {
+        width: 120px;
+      }
+      #tabla-container {
+        width: 90%;
+        top: 140px;
+        left: 5%;
+      }
+      #coordinates {
+        bottom: 5px;
+        left: 5px;
+        font-size: 12px;
+      }
+      button {
+        padding: 4px 8px;
+        font-size: 14px;
+      }
+      #load-table-btn {
+        top: 80px;
+        left: 10px;
+      }
+      #download-table-btn {
+        top: 80px;
+        left: 120px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      #search-container {
+        width: 160px;
+        left: 5px;
+      }
+      #search-input {
+        width: 120px;
+      }
+      #tabla-container {
+        width: 100%;
+        top: 120px;
+      }
+      #coordinates {
+        bottom: 5px;
+        left: 5px;
+        font-size: 12px;
+      }
+      button {
+        padding: 4px 8px;
+        font-size: 12px;
+      }
+      #load-table-btn {
+        top: 70px;
+        left: 5px;
+      }
+      #download-table-btn {
+        top: 70px;
+        left: 100px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="map">
+    <div id="popup" class="ol-popup">
+      <a href="#" id="popup-closer" class="ol-popup-closer"></a>
+      <div id="popup-content"></div>
+    </div>
+  </div>
+
+  <div id="search-container">
+    <input type="text" id="search-input" placeholder="Ingrese clave..." />
+    <button onclick="buscarElemento()">Buscar</button>
+  </div>
+
+  <div id="coordinates">Coordenadas: -</div>
+
+  <button id="load-table-btn" onclick="cargarExcelDesdeGitHub()" style="position: absolute; top: 100px; left: 50px; z-index: 1000; background-color: #f8f8f8; padding: 10px 15px; border-radius: 5px; box-shadow: 0px 0px 5px rgba(0,0,0,0.3);">
+    Cargar Tabla
+  </button>
+
+  <button id="download-table-btn" onclick="descargarTabla()" style="position: absolute; top: 100px; left: 170px; z-index: 1000; background-color: #f8f8f8; padding: 10px 15px; border-radius: 5px; box-shadow: 0px 0px 5px rgba(0,0,0,0.3); display:none;">
+    Descargar Tabla
+  </button>
+
+  <button id="streetViewBtn" style="position: absolute; bottom: 20px; right: 20px; z-index: 1000; background-color: #f8f8f8; border: none; border-radius: 5px; box-shadow: 0px 0px 5px rgba(0,0,0,0.3);">
+    <img src="https://raw.githubusercontent.com/INYGEO/reportes/main/resources/street_view_icon_198734.svg" alt="Street View" style="width: 30px; height: auto;">
+  </button>
+
+  <div id="tabla-container">
+    <button id="modal-close" onclick="cerrarTabla()">×</button>
+    <div id="modal-body"></div>
+  </div>
+
+  <script src="resources/qgis2web_expressions.js"></script>
+  <script src="./resources/functions.js"></script>
+  <script src="./resources/ol.js"></script>
+  <script src="./resources/ol-layerswitcher.js"></script>
+  <script src="layers/MALLA_TIJUANA_1.js"></script>
+  <script src="layers/ORTOFOTOYDEM_2.js"></script>
+  <script src="layers/;LIDAR_3.js"></script>
+  <script src="layers/VOLADAS_4.js"></script>
+  <script src="layers/ENTREGADAS_5.js"></script>
+  <script src="styles/MALLA_TIJUANA_1_style.js"></script>
+  <script src="styles/ORTOFOTOYDEM_2_style.js"></script>
+  <script src="styles/LIDAR_3_style.js"></script>
+  <script src="styles/VOLADAS_4_style.js"></script>
+  <script src="styles/ENTREGADAS_5_style.js"></script>
+  <script src="./layers/layers.js" type="text/javascript"></script>
+  <script src="./resources/Autolinker.min.js"></script>
+  <script src="./resources/qgis2web.js"></script>
+
+  <script>
+    // Estilo de resaltado para las características del mapa
+    var highlightStyle = new ol.style.Style({
+      stroke: new ol.style.Stroke({
+        color: 'yellow',
+        width: 3
+      }),
+      fill: new ol.style.Fill({
+        color: 'rgba(255, 255, 0, 0.3)'
+      })
+    });
+
+    var selectedFeature = null;
+    var latLng; // Variable para almacenar las coordenadas
+    var isStreetViewMode = false; // Para controlar el modo de Street View
+
+    map.on('pointermove', function (event) {
+      let featureFound = false;
+      map.getTargetElement().style.cursor = '';
+      map.forEachFeatureAtPixel(event.pixel, function (feature, layer) {
+        if (layer) {
+          featureFound = true;
+          if (selectedFeature !== feature) {
+            if (selectedFeature) {
+              selectedFeature.setStyle(null);
+            }
+            selectedFeature = feature;
+            selectedFeature.setStyle(highlightStyle);
+            map.getTargetElement().style.cursor = 'pointer';
+          }
+        }
+      });
+      if (!featureFound && selectedFeature) {
+        selectedFeature.setStyle(null);
+        selectedFeature = null;
+      }
+      var coordinate = event.coordinate;
+      var transformedCoord = ol.proj.toLonLat(coordinate);
+      var coordsString = 'Lon: ' + transformedCoord[0].toFixed(6) + ' | Lat: ' + transformedCoord[1].toFixed(6);
+      document.getElementById('coordinates').innerHTML = 'Coordenadas: ' + coordsString;
+    });
+
+    // Evento para el botón de activar Street View
+    document.getElementById('streetViewBtn').addEventListener('click', function() {
+      isStreetViewMode = !isStreetViewMode; // Alternar el modo de Street View
+      this.style.backgroundColor = isStreetViewMode ? '#d1ffd1' : '#f8f8f8'; // Cambiar color para indicar que está activo
+    });
+
+    // Agregar un puntero al mapa
+    map.on('click', function(event) {
+      if (isStreetViewMode) {
+        latLng = ol.proj.toLonLat(event.coordinate); // Guardar coordenadas
+        const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${latLng[1]},${latLng[0]}`;
+        window.open(streetViewUrl, '_blank'); // Abrir Street View en una nueva pestaña
+        isStreetViewMode = false; // Desactivar el modo después de seleccionar
+        document.getElementById('streetViewBtn').style.backgroundColor = '#f8f8f8'; // Restablecer color del botón
+      }
+    });
+
+    function buscarElemento() {
+      let claveBuscada = document.getElementById('search-input').value.trim();
+      if (!claveBuscada) {
+        alert("Por favor, ingrese una clave.");
+        return;
+      }
+      let encontrado = false;
+      map.getLayers().forEach(layer => {
+        if (layer.getSource && layer.getSource().getFeatures) {
+          let features = layer.getSource().getFeatures();
+          features.forEach(feature => {
+            if (feature.get('CLAVE1KTIJ') === claveBuscada) {
+              let extent = feature.getGeometry().getExtent();
+              map.getView().fit(extent, { duration: 1000, maxZoom: 17 });
+              feature.setStyle(new ol.style.Style({
+                stroke: new ol.style.Stroke({ color: 'yellow', width: 3 }),
+                fill: new ol.style.Fill({ color: 'rgba(255, 255, 0, 0.3)' })
+              }));
+              setTimeout(() => {
+                feature.setStyle(null);
+              }, 3000);
+              encontrado = true;
+            }
+          });
+        }
+      });
+      if (!encontrado) {
+        alert("Clave no encontrada.");
+      }
+    }
+
+    function cargarExcelDesdeGitHub() {
+      const url = 'https://raw.githubusercontent.com/Pako311/PRUEBA/main/REPORTE.xlsx';
+      fetch(url)
+        .then(response => response.arrayBuffer())
+        .then(data => {
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          const tableData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+          generarTabla(tableData);
+        })
+        .catch(error => console.error(error));
+    }
+
+    function generarTabla(data) {
+      let table = "<table><tr><th>Clave</th><th>Estado</th><th>Última Modificación</th></tr>";
+      data.slice(1).forEach((row, index) => {
+        table += "<tr>";
+        table += `<td>${row[0]}</td>`;
+        table += `<td>${row[1]}</td>`;
+        table += `<td>${row[2]}</td>`;
+        table += "</tr>";
+      });
+      table += "</table>";
+      document.getElementById('modal-body').innerHTML = table;
+      document.getElementById('tabla-container').style.display = 'block';
+      document.getElementById('download-table-btn').style.display = 'inline-block';
+    }
+
+    function descargarTabla() {
+      const url = 'https://raw.githubusercontent.com/Pako311/PRUEBA/main/REPORTE.xlsx';
+      fetch(url)
+        .then(response => response.blob())
+        .then(blob => {
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = 'REPORTE.xlsx';
+          link.click();
+        })
+        .catch(error => console.error('Error al descargar la tabla:', error));
+    }
+
+    function cerrarTabla() {
+      document.getElementById('tabla-container').style.display = 'none';
+      document.getElementById('download-table-btn').style.display = 'none';
+    }
+  </script>
+</body>
+</html>
