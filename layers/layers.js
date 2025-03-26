@@ -53,7 +53,7 @@ var lyr_LIDAR_3 = new ol.layer.Vector({
                 source:jsonSource_LIDAR_3, 
                 style: style_LIDAR_3,
                 popuplayertitle: 'LIDAR',
-                interactive: true,
+                interactive: false,
                 title: '<img src="styles/legend/LIDAR_3.png" /> LIDAR'
             });
 var format_VOLADAS_4 = new ol.format.GeoJSON();
