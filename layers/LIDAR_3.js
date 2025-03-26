@@ -1,0 +1,1 @@
+var json_LIDAR_3 = {"type":"FeatureCollection","name":"LIDAR_3","crs":{"type":"name","properties":{"name":"urn:ogc:def:crs:OGC:1.3:CRS84"}},"features":[{"type":"Feature","properties":{"CLAVE1K":null,"N_V":null,"SECTOR":null},"geometry":{"type":"Point","coordinates":[-116.829861111101366,32.441406249848605]}}]}
