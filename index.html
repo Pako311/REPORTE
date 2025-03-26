@@ -213,7 +213,7 @@
   </button>
 
   <button id="streetViewBtn" style="position: absolute; bottom: 20px; right: 20px; z-index: 1000; background-color: #f8f8f8; border: none; border-radius: 5px; box-shadow: 0px 0px 5px rgba(0,0,0,0.3);">
-    <img src="https://raw.githubusercontent.com/INYGEO/reportes/main/resources/street_view_icon_198734.svg" alt="Street View" style="width: 30px; height: auto;">
+    <img src="https://raw.githubusercontent.com/INYGEO/REPORTE/main/resources/street_view_icon_198734.svg" alt="Street View" style="width: 30px; height: auto;">
   </button>
 
   <div id="tabla-container">
@@ -227,7 +227,7 @@
   <script src="./resources/ol-layerswitcher.js"></script>
   <script src="layers/MALLA_TIJUANA_1.js"></script>
   <script src="layers/ORTOFOTOYDEM_2.js"></script>
-  <script src="layers/;LIDAR_3.js"></script>
+  <script src="layers/LIDAR_3.js"></script>
   <script src="layers/VOLADAS_4.js"></script>
   <script src="layers/ENTREGADAS_5.js"></script>
   <script src="styles/MALLA_TIJUANA_1_style.js"></script>
@@ -330,7 +330,7 @@
     }
 
     function cargarExcelDesdeGitHub() {
-      const url = 'https://raw.githubusercontent.com/Pako311/PRUEBA/main/REPORTE.xlsx';
+      const url = 'https://raw.githubusercontent.com/Pako311/REPORTE/main/REPORTE.xlsx';
       fetch(url)
         .then(response => response.arrayBuffer())
         .then(data => {
@@ -358,7 +358,7 @@
     }
 
     function descargarTabla() {
-      const url = 'https://raw.githubusercontent.com/Pako311/PRUEBA/main/REPORTE.xlsx';
+      const url = 'https://raw.githubusercontent.com/Pako311/REPORTE/main/REPORTE.xlsx';
       fetch(url)
         .then(response => response.blob())
         .then(blob => {
